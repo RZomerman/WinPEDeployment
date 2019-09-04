@@ -62,7 +62,7 @@ Add-Type @"
     )
 
 If (!($CustomGitBranch)){$CustomGitBranch='master'}
-If (!($CustomGitLocation)){$CustomGitLocation='RZomerman/Deployment'}
+If (!($CustomGitLocation)){$CustomGitLocation='RZomerman/WinPEDeployment'}
 
 Function Get-FileContents {
     Param(
@@ -137,7 +137,7 @@ write-host ""
 Write-Host "Validating if a newer version of this script is available"
 
 
-$ScriptVersion=Get-FileContents 'x:\PrepareDeployoment.ps1'
+$ScriptVersion=Get-FileContents 'x:\PrepareDeployment.ps1'
  Foreach ($line in $ScriptVersion) {
             If ($line -like '$version=*') {
                 $Localversion=$line.replace('$version=','')
