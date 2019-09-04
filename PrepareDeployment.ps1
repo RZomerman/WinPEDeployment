@@ -68,7 +68,7 @@ $regex = @"
 
 #If specified, it will go to the network share to download the Cloudbuilder.vhdx..
 #Username and password for network
-$version="201909047"
+$version="201909048"
 
 ## START SCRIPT
 $NETWORK_WAIT_TIMEOUT_SECONDS = 120
@@ -183,10 +183,10 @@ write-host "                                                                    
         Write-AlertMessage -Message "Provide fileshare to be mounted in Z drive (eg. \\172.16.5.10\Share)"
         $ShareRoot = read-host 
         Write-AlertMessage -Message "Please provide username and password for share"
-        $Credential=get-credential  -Message "Please provide username and password for share" | Out-Null
+        $Credential=get-credential  -Message "Please provide username and password for share" 
 
         $DriveLetter = "Z"
-        Write-LogMessage -Message ("Validating network access to " + $ShareRoot)
+        Write-LogMessage -Message ("Validating network access to " + $ShareRoot.split('\')[2]) 
         If (test-connection $ShareRoot.split('\')[2]) {
         Write-LogMessage -Message "Creating network drive $DriveLetter to source share"
             If (test-path z:\) {
