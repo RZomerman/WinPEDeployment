@@ -68,7 +68,7 @@ $regex = @"
 
 #If specified, it will go to the network share to download the Cloudbuilder.vhdx..
 #Username and password for network
-$version="201909045"
+$version="201909046"
 
 ## START SCRIPT
 $NETWORK_WAIT_TIMEOUT_SECONDS = 120
@@ -113,18 +113,13 @@ write-host "                                                                    
  $DecomposedShare=$NetworkShare.split("\")
  $ShareRoot = ("\\" + $DecomposedShare[2] + "\" + $DecomposedShare[3])
  $sourceVHDFolder=$NetworkShare.Replace($ShareRoot,"")
-
- Write-LogMessage -Message "Preparing Network WIM File Deployment: $winPEStartTime"
- 
-
  
  Write-LogMessage -Message "Script version: $version"
  Write-LogMessage -Message "Running on a $HostManufacturer $HostModel"
 #System Validation checks
-    $cores=CheckCPU
-        Write-LogMessage -Message "System has a total of $cores logical cores"
- 
-    $HyperV=CheckHyperVSupport
+    
+    CheckCPU
+     $HyperV=CheckHyperVSupport
         If ($HyperV){    
             Write-AlertMessage -Message "CPU does not meet Hyper-V requirements.. "
          }
@@ -213,7 +208,9 @@ write-host "                                                                    
         Write-host "---------------------------------"
         Write-host ""
         Write-host "To deploy your wim file, type:"
-        Write-host "dism /Apply-Image /ImageFile:Z:\HUB\install.wim /Index:1 /ApplyDir:W:\ W:\Windows\System32\bcdboot W:\Windows /s S:"
+        Write-host " dism /Apply-Image /ImageFile:Z:\HUB\install.wim /Index:1 /ApplyDir:W:\ "
+        Write-host "then to activate the system drive"
+        Write-host " W:\Windows\System32\bcdboot W:\Windows /s S:"
         Write-host ""
         Write-host "concluding the script"
         exit-PSHostProcess

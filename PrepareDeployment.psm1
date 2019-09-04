@@ -709,7 +709,7 @@ function CheckCPU {
     $cs = Get-WmiObject -class Win32_ComputerSystem
     $Sockets=$cs.numberofprocessors
     $Cores=$cs.numberoflogicalprocessors
-    return $Cores
+    Write-LogMessage -Message "System has $Sockets sockets with a total of $cores logical cores"
 }
 
 
