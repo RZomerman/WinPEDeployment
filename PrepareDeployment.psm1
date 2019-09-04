@@ -5,15 +5,15 @@ Function HostIsWinPE{
     $wmi = $(gwmi Win32_OperatingSystem -computerName 'localhost')
     if ($wmi.OperatingSystemSKU -ge 7) {
         Write-LogMessage -Message "Windows Server system detected"
-        Write-LogMessage -Message "CloudBuilder download option enabled"
-        Write-LogMessage -Message "Drive erase disabled"
+        #Write-LogMessage -Message "CloudBuilder download option enabled"
+        #Write-LogMessage -Message "Drive erase disabled"
         return $false
     }elseif ($wmi.OperatingSystemSKU -eq 1) {
-        Write-LogMessage -Message "WINPE OS detected"
+        #Write-LogMessage -Message "WINPE OS detected"
         return $true
     }else{
         Write-LogMessage -Message "Could not detect SKU level $wmi.OperatingSystemSKU"
-        Write-LogMessage -Message "Drive erase disabled"
+        #Write-LogMessage -Message "Drive erase disabled"
         return $false
     }
 }
