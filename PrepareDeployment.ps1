@@ -68,7 +68,7 @@ $regex = @"
 
 #If specified, it will go to the network share to download the Cloudbuilder.vhdx..
 #Username and password for network
-$version="201909043"
+$version="201909044"
 
 ## START SCRIPT
 $NETWORK_WAIT_TIMEOUT_SECONDS = 120
@@ -153,12 +153,37 @@ write-host "                                                                    
     #starting network capabilities in WinPE
     Set-WinPEDeploymentPrerequisites 
 
-    Write-AlertMessage -Message "Provide fileshare where wim file is located (eg. \\172.16.5.10\Share)"
+    #info for IP addresses
+    $IpInfo=GetIPInfo
+    $NetArray=$IpInfo | Where { $_.IPAddress } 
+
+    ForEach ($Net in $NetArray) {
+        $IPaddress= $Net| Select -Expand IPAddress | Where { $_ -notlike '*:*' }
+        $Gateway= $Net | select -expand DefaultIPGateway
+        $Subnet = $net | select -expand IPSubnet | where {$_ -like '255*'}
+        $DHCPserver = $net | select -expand DHCPServer
+        $DNSServers = $Net | select -expand DNSServerSearchOrder
+        $DNSDomain = $Net | select -expand DNSDomain
+        Write-LogMessage -Message "Assigned IPv4 IP: $IPAddress"
+        Write-LogMessage -Message "Assigned Subnet:  $IPSubnet"
+        Write-LogMessage -Message "Assigned Gateway: $Gateway"
+        ForEach ($DNS in $DNSServers) {
+            Write-LogMessage -Message "Assigned DNS Server: $DNSServers"
+        }
+        ForEach ($Domain in $DNSDomain) {
+            Write-LogMessage -Message "Assigned DNS suffix: $Domain"
+        }
+        Write-LogMessage -Message "IP Assinged by: $DHCPServer"
+        
+    }
+
+
+    
+
+    Write-AlertMessage -Message "Provide fileshare to be mounted in Z drive (eg. \\172.16.5.10\Share)"
     $ShareRoot = read-host 
     Write-AlertMessage -Message "Please provide username and password for share"
-    $Credential=get-credential 
-    Write-AlertMessage -Message "please provide the path to the wim file (eg: \sources\install.wim)"
-    $sourceWimFile = read-host 
+    $Credential=get-credential  -Message "Please provide username and password for share" | Out-Null
 
     $DriveLetter = "Z"
     Write-LogMessage -Message ("Validating network access to " + $ShareRoot)

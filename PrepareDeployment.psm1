@@ -23,6 +23,10 @@ function ComputerInfo {
     return $ComputerInfo
 }
 # Starts all the services needed to intialize deployment on win PE
+function GetIPInfo {
+    $IPinfo=Get-WmiObject Win32_NetworkAdapterConfiguration
+    return $IPinfo
+}
 function Set-WinPEDeploymentPrerequisites
 {
     $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
