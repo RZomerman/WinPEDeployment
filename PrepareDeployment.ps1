@@ -68,7 +68,7 @@ $regex = @"
 
 #If specified, it will go to the network share to download the Cloudbuilder.vhdx..
 #Username and password for network
-$version="201909046"
+$version="201909047"
 
 ## START SCRIPT
 $NETWORK_WAIT_TIMEOUT_SECONDS = 120
@@ -152,46 +152,68 @@ write-host "                                                                    
     $IpInfo=GetIPInfo
     $NetArray=$IpInfo | Where { $_.IPAddress } 
 
-    ForEach ($Net in $NetArray) {
-        $IPaddress= $Net| Select -Expand IPAddress | Where { $_ -notlike '*:*' }
-        $Gateway= $Net | select -expand DefaultIPGateway
-        $IPSubnet = $net | select -expand IPSubnet | where {$_ -like '255*'}
-        $DHCPserver = $net | select -expand DHCPServer
-        $DNSServers = $Net | select -expand DNSServerSearchOrder
-        $DNSDomain = $Net | select -expand DNSDomain
-        Write-LogMessage -Message "Assigned IPv4 IP: $IPAddress"
-        Write-LogMessage -Message "Assigned SubMask: $IPSubnet"
-        Write-LogMessage -Message "Assigned Gateway: $Gateway"
-        ForEach ($DNS in $DNSServers) {
-            Write-LogMessage -Message "Assigned DNS Srv: $DNSServers"
+    If ($NetArray.count -eq 0){
+        Write-AlertMessage -Message "No network found, local mode only"
+    }
+    else {
+        #THIS IS THE ENTIRE NETWORK PART
+        ForEach ($Net in $NetArray) {
+            $IPaddress= $Net| Select -Expand IPAddress | Where { $_ -notlike '*:*' }
+            $Gateway= $Net | select -expand DefaultIPGateway
+            $IPSubnet = $net | select -expand IPSubnet | where {$_ -like '255*'}
+            $DHCPserver = $net | select -expand DHCPServer
+            $DNSServers = $Net | select -expand DNSServerSearchOrder
+            $DNSDomain = $Net | select -expand DNSDomain
+            Write-LogMessage -Message "Assigned IPv4 IP: $IPAddress"
+            Write-LogMessage -Message "Assigned SubMask: $IPSubnet"
+            Write-LogMessage -Message "Assigned Gateway: $Gateway"
+            ForEach ($DNS in $DNSServers) {
+                Write-LogMessage -Message "Assigned DNS Srv: $DNSServers"
+            }
+            ForEach ($Domain in $DNSDomain) {
+            Write-LogMessage -Message "Assigned Suffix : $Domain"
+            }
+            Write-LogMessage -Message "Net DHCP Server : $DHCPServer"
+            
         }
-        ForEach ($Domain in $DNSDomain) {
-        Write-LogMessage -Message "Assigned Suffix : $Domain"
-        }
-        Write-LogMessage -Message "Net DHCP Server : $DHCPServer"
+
+
         
+
+        Write-AlertMessage -Message "Provide fileshare to be mounted in Z drive (eg. \\172.16.5.10\Share)"
+        $ShareRoot = read-host 
+        Write-AlertMessage -Message "Please provide username and password for share"
+        $Credential=get-credential  -Message "Please provide username and password for share" | Out-Null
+
+        $DriveLetter = "Z"
+        Write-LogMessage -Message ("Validating network access to " + $ShareRoot)
+        If (test-connection $ShareRoot.split('\')[2]) {
+        Write-LogMessage -Message "Creating network drive $DriveLetter to source share"
+            If (test-path z:\) {
+                Write-LogMessage -Message "Network drive already mounted"
+            }else{
+                New-PSDrive -Name $DriveLetter -PSProvider FileSystem -Root $ShareRoot -Credential $Credential -Persist -Scope Global
+                }
+            }
     }
 
 
-    
+    Write-LogMessage -Message "Creating Drive Preparation Script - diskpart"
+    $DiskParkFile=New-Item ($LogDriveLetter + '\DiskClear.txt')
+    Add-Content $DiskParkFile 'select disk 0'
+    Add-Content $DiskParkFile "clean"
+    Add-Content $DiskParkFile "create partition primary size=100"
+    Add-Content $DiskParkFile "format quick fs=ntfs label=System"
+    Add-Content $DiskParkFile "assign letter=S"
+    Add-Content $DiskParkFile "active"
+    Add-Content $DiskParkFile "create partition primary"
+    Add-Content $DiskParkFile "format quick fs=ntfs label=Windows"
+    Add-Content $DiskParkFile "assign letter=W"
 
-    Write-AlertMessage -Message "Provide fileshare to be mounted in Z drive (eg. \\172.16.5.10\Share)"
-    $ShareRoot = read-host 
-    Write-AlertMessage -Message "Please provide username and password for share"
-    $Credential=get-credential  -Message "Please provide username and password for share" | Out-Null
 
-    $DriveLetter = "Z"
-    Write-LogMessage -Message ("Validating network access to " + $ShareRoot)
-    If (test-connection $ShareRoot.split('\')[2]) {
-    Write-LogMessage -Message "Creating network drive $DriveLetter to source share"
-        If (test-path z:\) {
-            Write-LogMessage -Message "Network drive already mounted"
-        }else{
-            New-PSDrive -Name $DriveLetter -PSProvider FileSystem -Root $ShareRoot -Credential $Credential -Persist -Scope Global
-            }
-        }
-    
-    #Need to clean the disks
+    $SetBootBCE=New-Item ($LogDriveLetter + '\setboot.bat')
+    Add-Content $SetBootBCE 'W:\Windows\System32\bcdboot W:\Windows /s S:'
+
     #Need to deploy 
         Write-host "To clear the disk and prepare it for the WIM file deployment"
         write-host "type diskpart and execute the following commands:"
@@ -207,9 +229,13 @@ write-host "                                                                    
         Write-host "assign letter=W"
         Write-host "---------------------------------"
         Write-host ""
+        Write-host "type: diskpart /s DiskClear.txt for automated version"
+        Write-host ""
         Write-host "To deploy your wim file, type:"
         Write-host " dism /Apply-Image /ImageFile:Z:\HUB\install.wim /Index:1 /ApplyDir:W:\ "
-        Write-host "then to activate the system drive"
+        Write-host ""
+        Write-host "then to activate boot for the system drive"
+        Write-host "run setboot.bat    - or - "
         Write-host " W:\Windows\System32\bcdboot W:\Windows /s S:"
         Write-host ""
         Write-host "concluding the script"
