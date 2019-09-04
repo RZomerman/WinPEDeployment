@@ -68,7 +68,7 @@ $regex = @"
 
 #If specified, it will go to the network share to download the Cloudbuilder.vhdx..
 #Username and password for network
-$version="201909048"
+$version="201909049"
 
 ## START SCRIPT
 $NETWORK_WAIT_TIMEOUT_SECONDS = 120
@@ -214,31 +214,23 @@ write-host "                                                                    
     $SetBootBCE=New-Item ($LogDriveLetter + '\setboot.bat')
     Add-Content $SetBootBCE 'W:\Windows\System32\bcdboot W:\Windows /s S:'
 
+    $ApplyImage=New-Item ($LogDriveLetter + '\ApplyImage.bat')
+    Add-Content $ApplyImage 'dism /Apply-Image /ImageFile:Z:\install.wim /Index:1 /ApplyDir:W:\ '
+   
     #Need to deploy 
-        Write-host "To clear the disk and prepare it for the WIM file deployment"
-        write-host "type diskpart and execute the following commands:"
-        Write-host "---------------------------------"
-        Write-host "select disk <>"
-        Write-host "clean"
-        Write-host "create partition primary size=100"
-        Write-host "format quick fs=ntfs label=System"
-        Write-host "assign letter=S"
-        Write-host "active"
-        Write-host "create partition primary"
-        Write-host "format quick fs=ntfs label=Windows"
-        Write-host "assign letter=W"
-        Write-host "---------------------------------"
+        Write-host "- Welcome to the WinPE Deployment - "
+        write-host "   To partition/format the drive type diskpart"
+        Write-host "   type: diskpart /s DiskClear.txt for automated version on disk 0"
         Write-host ""
-        Write-host "type: diskpart /s DiskClear.txt for automated version"
+        Write-host "   To deploy your wim file, type:"
+        Write-host "    Dism /Apply-Image /ImageFile:Z:\install.wim /Index:1 /ApplyDir:W:\ "
+        Write-host "    - or type ApplyImage for the default setting"
         Write-host ""
-        Write-host "To deploy your wim file, type:"
-        Write-host " dism /Apply-Image /ImageFile:Z:\HUB\install.wim /Index:1 /ApplyDir:W:\ "
+        Write-host "   then to activate boot for the system drive"
+        Write-host "     W:\Windows\System32\bcdboot W:\Windows /s S:"
+        Write-host "    - or run setboot.bat for the default setting"
+
         Write-host ""
-        Write-host "then to activate boot for the system drive"
-        Write-host "run setboot.bat    - or - "
-        Write-host " W:\Windows\System32\bcdboot W:\Windows /s S:"
-        Write-host ""
-        Write-host "concluding the script"
         exit-PSHostProcess
 
 
