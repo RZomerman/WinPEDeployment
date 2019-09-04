@@ -68,7 +68,7 @@ $regex = @"
 
 #If specified, it will go to the network share to download the Cloudbuilder.vhdx..
 #Username and password for network
-$version="201909044"
+$version="201909045"
 
 ## START SCRIPT
 $NETWORK_WAIT_TIMEOUT_SECONDS = 120
@@ -160,20 +160,20 @@ write-host "                                                                    
     ForEach ($Net in $NetArray) {
         $IPaddress= $Net| Select -Expand IPAddress | Where { $_ -notlike '*:*' }
         $Gateway= $Net | select -expand DefaultIPGateway
-        $Subnet = $net | select -expand IPSubnet | where {$_ -like '255*'}
+        $IPSubnet = $net | select -expand IPSubnet | where {$_ -like '255*'}
         $DHCPserver = $net | select -expand DHCPServer
         $DNSServers = $Net | select -expand DNSServerSearchOrder
         $DNSDomain = $Net | select -expand DNSDomain
         Write-LogMessage -Message "Assigned IPv4 IP: $IPAddress"
-        Write-LogMessage -Message "Assigned Subnet:  $IPSubnet"
+        Write-LogMessage -Message "Assigned SubMask: $IPSubnet"
         Write-LogMessage -Message "Assigned Gateway: $Gateway"
         ForEach ($DNS in $DNSServers) {
-            Write-LogMessage -Message "Assigned DNS Server: $DNSServers"
+            Write-LogMessage -Message "Assigned DNS Srv: $DNSServers"
         }
         ForEach ($Domain in $DNSDomain) {
-            Write-LogMessage -Message "Assigned DNS suffix: $Domain"
+        Write-LogMessage -Message "Assigned Suffix : $Domain"
         }
-        Write-LogMessage -Message "IP Assinged by: $DHCPServer"
+        Write-LogMessage -Message "Net DHCP Server : $DHCPServer"
         
     }
 
